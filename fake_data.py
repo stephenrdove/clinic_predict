@@ -8,72 +8,27 @@ Created on Fri Jun  8 12:11:50 2018
 
 import numpy as np
 from random import randint as rint
+import random as rand
 import datetime as dt
 import sys
 
-import fake_helpers as helper
-
-# Patient Level Information - Link to Encounters
-class Patient():
-    def __init__(self,mrn,ssn):
-        self.mrn = mrn
-        self.surname = "patient-"+str(ssn)
-        #ssn = str(ssn).zfill(9)
-        #self.ssn = ssn[0:3]+"-"+ssn[3:5]+"-"+ssn[5:]
-        self.zip = "0"+str(rint(2900,2999))+"-"+str(rint(1000,9999))
-        self.sex = ["Male","Female"][rint(0,1)]
-        #self.birth_date = dt.date(rint(1930,2005),rint(1,12),rint(1,28))
-        self.age = helper.random_age()
-        self.opioid_overdose = helper.opioid_label(self.age,self.sex)
-        self.ed_return = helper.ed_return_label(self.age,self.sex)
-        self.enc_list = []
-        self.csn_list = []
-    def add_csn(self,enc):
-        self.enc_list.append(enc)
-        self.csn_list.append(enc.csn)
-
-# Encounter Level Information - Link to Medications and Diagnoses  
-class Encounter():
-    def __init__(self,csn):
-        self.csn = csn
-        self.med_list = []
-        self.dx_list = []
-        d = [rint(2015,2017),rint(1,12),rint(1,28),rint(0,19),rint(0,59)]
-        self.arrive_dt = dt.datetime(d[0],d[1],d[2],d[3],d[4])
-        self.depart_dt = dt.datetime(d[0],d[1],d[2],d[3]+4,d[4])
-        sample_dept = ["RIH ANDERSON EMERGENCY","TMH EMERGENCY",
-                       "NPH EMERGENCY","HCH HASBRO EMERGENCY"]
-        self.dept = sample_dept[rint(0,len(sample_dept)-1)]
-    def add_med(self,med):
-        self.med_list.append(med)
-    def add_dx(self,dx):
-        self.dx_list.append(dx)
-        
-# Medication Level Information
-class Medication():
-    def __init__(self,med_type):
-        
-        self.med_class = med_type/5
-        self.med_name = "med-"+str(med_type) 
-
-# Diagnosis Level Information
-class Diagnosis():
-    def __init__(self,dxID):
-        sample_dx = ["I99.8","L03.313","M25.559","S10.91XA","M53.3",
-                     "S91.209A","L08.9","R10.83","Z48.02","S43.409A",
-                     "K92.0","R33.9","K20.9","H66.90","K04.7"]
-        self.dx_code = sample_dx[dxID]
-
+from fake_patients import Patient,Encounter,Diagnosis,Medication,Procedure 
 
 class Database():
-    def __init__(self,num_pat,num_enc):
+    def __init__(self,num_pat,num_enc=None):
         self.num_pat = num_pat
+        if not num_enc:
+            num_enc = self.num_pat*5
         self.num_enc = num_enc
-        assert(self.num_pat >= self.num_enc)
+        assert(2*self.num_pat <= self.num_enc)
         self.pats = self._gen_patients()
+        self._add_label_data()
 
     def _gen_patients(self):
-        mrns = np.random.randint(0,9999999999,self.num_pat)
+        #mrns = np.random.randint(0,9999999999,self.num_pat)
+        self.mrns = np.arange(self.num_pat)*(int(9999999999/self.num_pat))
+        np.random.shuffle(self.mrns)
+        '''
         done = 0
         while not done:
             mrns = np.unique(mrns)
@@ -81,19 +36,26 @@ class Database():
                 done = 1
             else:
                 np.concatenate((mrns,np.random.randint(0,9999999999,self.num_pat-mrns.shape[0])))
-        print("Number of MRNs: "+str(mrns.shape[0]))
-        mrns = mrns + 10000000000
-        #print mrns
+        '''
+        print("Number of MRNs: "+str(self.mrns.shape[0]))
+        #mrns = mrns + 10000000000
+        
+        self.pat_dict = {}
         pats = []
-        for i,mrn in enumerate(mrns):
-            pats.append(Patient(mrn,i))
+        for i,mrn in enumerate(self.mrns):
+            pat = Patient(mrn)
+            pats.append(pat)
+            self.pat_dict[mrn] = pat
 
         pats = self._gen_encounters(pats)
 
         return pats
 
     def _gen_encounters(self,pats):
-        csns = np.random.randint(0,999999999,self.num_enc)
+        #csns = np.random.randint(0,999999999,self.num_enc)
+        csns = np.arange(self.num_enc)*(int(999999999/self.num_enc))
+        np.random.shuffle(csns)
+        '''
         done = 0
         while not done:
             csns = np.unique(csns)
@@ -101,30 +63,91 @@ class Database():
                 done = 1
             else:
                 np.concatenate((csns,np.random.randint(0,999999999,self.num_enc-csns.shape[0])))
+        '''
         print("Number of CSNs: "+str(csns.shape[0]))
-        csns = csns + 1000000000
-        encs = []
-        for csn in csns:
+        
+        mrn_list = self._mrn_list()
+        
+        for i,csn in enumerate(csns):
             tmp_enc = Encounter(csn)
             meds = np.random.choice(25,rint(0,8),replace=False)
             for med in meds:
                 tmp_enc.add_med(Medication(med))
+            if rand.random() < .05:
+                tmp_enc.add_med(Medication(0,opioid=True))
+            prcs = np.random.choice(25,rint(0,8),replace=False)
+            for prc in prcs:
+                tmp_enc.add_prc(Procedure(prc))
             dxs = np.random.choice(15,rint(1,5),replace=False)
-            for dx in dxs:
-                tmp_enc.add_dx(Diagnosis(dx))
-            encs.append(tmp_enc)
+            for _ in range(rint(1,5)):
+                tmp_enc.add_dx(Diagnosis())
             
-        #print csns
-        pats = self._assign_csn(encs,pats)
-        
+            self.pat_dict[mrn_list[i]].add_csn(tmp_enc)
+            
         return pats
 
-    def _assign_csn(self,enc_list,pats):
-        for i,enc in enumerate(enc_list[:len(pats)]):
-            pats[i].add_csn(enc)
-        for enc in enc_list[len(pats):]:
-            pats[rint(0,len(pats)-1)].add_csn(enc)
-        return pats
+    def _mrn_list(self):
+        mrn_list = np.zeros(self.num_enc,dtype='int64')
+        mrn_list[:self.num_pat] = self.mrns
+        i = self.num_pat
+        for mrn in self.mrns:
+            if self.pat_dict[mrn].has_positive():
+                mrn_list[i] = mrn
+                i += 1
+        remain = self.num_enc - i
+        add_indices = np.random.randint(0,self.num_pat)
+        mrn_list[-remain:] = self.mrns[add_indices]
+
+        return mrn_list
+
+
+    def _add_label_data(self):
+        for pat in self.pats:
+            # If the patient needs an ED Return
+            if pat.ed_return:
+                dates = [enc.arrive_dt for enc in pat.enc_list]
+                recent = np.argmax(dates) # highest arrival datetime
+                distant = np.argmin(dates) # lowest arrival datetime
+                # change the lowest datetime to be within 30 days of the highest
+                pat.enc_list[distant].change_dt(pat.enc_list[recent].arrive_dt + dt.timedelta(days=rint(1,29)))
+                if rand.random() < 0.8:
+                    new_prc = Procedure(0)
+                    pat.enc_list[recent].add_prc(new_prc)
+                if rand.random() < 0.8:
+                    new_dx = Diagnosis()
+                    new_dx.dx_code = 'B9'+str(rint(0,9))+'.'+str(rint(0,9))
+                    pat.enc_list[recent].add_dx(new_dx)
+                
+            # If the patient needs an opioid overdose
+            if pat.opioid_overdose:
+                dates = [(enc.arrive_dt,enc) for enc in pat.enc_list]
+                dates.sort()
+                od_enc = rint(len(dates)/2,len(dates)-1)
+                dates[od_enc][1].overdose_enc()
+                for tup in dates[:od_enc]:
+                    if rand.random() < 0.9:
+                        tup[1].add_med(Medication(0,opioid=True))
+                    if rand.random() < 0.8:
+                        op_dx = Diagnosis()
+                        op_dx.dx_code = 'F11.'+str(rint(0,9))
+                        tup[1].add_dx(op_dx)
+
+
+
+    def print_db(self):
+        for pat in self.pats:
+            pat.print_patient()
+    
+    def print_stats(self):
+        op,ed,tot = 0,0,0
+        for pat in self.pats:
+            op += pat.opioid_overdose
+            ed += pat.ed_return
+            tot += 1
+        print('{acc}% ({o}/{t}) of patients have an opioid overdose'.format(acc=(np.round(100*op/tot,2)),o=op,t=tot))
+        print('{acc}% ({e}/{t}) of patients have an ED return'.format(acc=(np.round(100*ed/tot,2)),e=ed,t=tot))
+
+
 
 '''
 def create_data():
@@ -152,4 +175,5 @@ def create_data():
 '''
 
 if __name__ == '__main__':
-    data = Database(100,1000)
+    data = Database(20000,40000)
+    data.print_stats()

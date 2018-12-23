@@ -7,7 +7,8 @@ Created on Fri Jun  8 17:38:29 2018
 """
 
 import csv
-from fake_data import createData
+from os import path
+from fake_data import Database
 
 # Printing Instructions - i.e. where to write the .csv to
 def printInstr():
@@ -15,46 +16,61 @@ def printInstr():
     filepath = raw_input("Enter a file location (no extension): ")
     return filepath
     
-def printFilename(filepath,filetype):
-    filename = filepath + "/" + filetype + ".csv"
-    outfile = open(filename, "wb")
+def printFilename(filetype,filepath='data'):
+    filename = path.join(filepath,filetype + '.csv')
+    outfile = open(filename, "w")
     writer = csv.writer(outfile)
     return writer,outfile
 
-if __name__ == "__main__":
-    pats = createData()
-    patData = [["Arrival Date and Time","Arrival Department Name","Departure Date and Time",
-                "Encounter Epic CSN","Patient Birth Date","Patient Last Name",
-                "Patient Postal Code","Patient Primary MRN","Patient Sex","Patient SSN"]]
+def main():
+    data = Database(50000,250000)
+    data.print_stats()
+    pats = data.pats
+
+    patData = [["Patient Primary MRN","Encounter Epic CSN","Arrival Department Name",
+                "Arrival Date and Time","Departure Date and Time","Patient Age",
+                "Patient Last Name","Patient Postal Code","Patient Sex","RETURN LABEL","OPIOID LABEL"]]
     
-    dxData = [["Arrival Date and Time","Encounter Epic CSN","ED Diagnosis Terminology Type",
-               "ED Diagnosis Terminology Value","Patient Primary MRN","Arrival Department Name"]]
+    dxData = [["Patient Primary MRN","Encounter Epic CSN","ED Diagnosis Terminology Type",
+               "ED Diagnosis Terminology Value","Arrival Department Name","RETURN LABEL","OPIOID LABEL"]]
     
-    medData = [["Encounter Epic CSN","Arrival Date and Time","Medication Name","Medication Therapeutic Class"]]
+    medData = [["Patient Primary MRN","Encounter Epic CSN","Medication Name","Medication Therapeutic Class","RETURN LABEL","OPIOID LABEL"]]
+    
+    prcData = [["Patient Primary MRN","Encounter Epic CSN","Procedure Name","Procedure Order Class","RETURN LABEL","OPIOID LABEL"]]
     
     for pat in pats:
         for enc in pat.enc_list:
-            tmpPat = [enc.arrive_dt,enc.dept,enc.depart_dt,enc.csn,pat.birth_date]
-            tmpPat += [pat.surname,pat.zip,pat.mrn,pat.sex,pat.ssn]
+            tmpPat = [pat.mrn,enc.csn,enc.dept,enc.arrive_dt,enc.depart_dt,pat.age]
+            tmpPat += [pat.surname,pat.zip,pat.sex,pat.ed_return,pat.opioid_overdose]
             patData.append(tmpPat)
             for dx in enc.dx_list:
-                dxData.append([enc.arrive_dt,enc.csn,"ICD-10",dx.dx_code,pat.mrn,enc.dept])
+                dxData.append([pat.mrn,enc.csn,"ICD-10",dx.dx_code,pat.mrn,pat.ed_return,pat.opioid_overdose])
             for med in enc.med_list:
-                medData.append([enc.csn,enc.arrive_dt,med.med_name,med.med_class])
+                medData.append([pat.mrn,enc.csn,med.med_name,med.med_class,pat.ed_return,pat.opioid_overdose])
+            for proc in enc.proc_list:
+                prcData.append([pat.mrn,enc.csn,proc.prc_name,proc.prc_class,pat.ed_return,pat.opioid_overdose])
                 
-    fp = printInstr()
+    #fp = printInstr()
     
-    writer,outfile = printFilename(fp,"pat")
+    writer,outfile = printFilename(filetype="pat")
     writer.writerows(patData)
     outfile.close()
     
-    writer,outfile = printFilename(fp,"dx")
+    writer,outfile = printFilename(filetype="dx")
     writer.writerows(dxData)
     outfile.close()
     
-    writer,outfile = printFilename(fp,"med")
+    writer,outfile = printFilename(filetype="med")
     writer.writerows(medData)
     outfile.close()
+
+    writer,outfile = printFilename(filetype="prc")
+    writer.writerows(prcData)
+    outfile.close()
+
+if __name__ == "__main__":
+    main()
+    
             
 
 

@@ -35,9 +35,9 @@ def opioid_label(age,sex):
     if age < 19:
         r_a = 0.0001
     elif age < 41:
-        r_a = 0.005
+        r_a = 0.008
     elif age < 64:
-        r_a = 0.002
+        r_a = 0.003
     else:
         r_a = 0.001
     
