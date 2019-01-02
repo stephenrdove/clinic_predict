@@ -6,12 +6,8 @@ def random_age():
     age_val = rand.random()
     if age_val < 0.2:
         age = int(15*rand.random()) # 15-0=15
-        if age>14:
-            print('WRONG!')
     elif age_val < 0.85:
         age = int(50*rand.random()) + 15 # 65-15=50
-        if age<15 or age>64:
-            print('WRONG!')
     else:
         age = int(30*rand.random()) + 65 # 95-65=30
 
@@ -27,7 +23,7 @@ def ed_return_label(age,sex):
     else:
         r_a = 0.22
     
-    return rand.random() < (r_a*r_s)/r
+    return (r_a*r_s)/r
 
 def opioid_label(age,sex):
     s = 0.5

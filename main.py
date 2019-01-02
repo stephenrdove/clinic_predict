@@ -23,7 +23,7 @@ def printFilename(filetype,filepath='data'):
     return writer,outfile
 
 def main():
-    data = Database(50000,250000)
+    data = Database(5000,25000)
     data.print_stats()
     pats = data.pats
 
@@ -41,30 +41,30 @@ def main():
     for pat in pats:
         for enc in pat.enc_list:
             tmpPat = [pat.mrn,enc.csn,enc.dept,enc.arrive_dt,enc.depart_dt,pat.age]
-            tmpPat += [pat.surname,pat.zip,pat.sex,pat.ed_return,pat.opioid_overdose]
+            tmpPat += [pat.surname,pat.zip,pat.sex,enc.ed_return,pat.opioid_overdose]
             patData.append(tmpPat)
             for dx in enc.dx_list:
-                dxData.append([pat.mrn,enc.csn,"ICD-10",dx.dx_code,pat.mrn,pat.ed_return,pat.opioid_overdose])
+                dxData.append([pat.mrn,enc.csn,"ICD-10",dx.dx_code,pat.mrn,enc.ed_return,pat.opioid_overdose])
             for med in enc.med_list:
-                medData.append([pat.mrn,enc.csn,med.med_name,med.med_class,pat.ed_return,pat.opioid_overdose])
+                medData.append([pat.mrn,enc.csn,med.med_name,med.med_class,enc.ed_return,pat.opioid_overdose])
             for proc in enc.proc_list:
-                prcData.append([pat.mrn,enc.csn,proc.prc_name,proc.prc_class,pat.ed_return,pat.opioid_overdose])
+                prcData.append([pat.mrn,enc.csn,proc.prc_name,proc.prc_class,enc.ed_return,pat.opioid_overdose])
                 
     #fp = printInstr()
     
-    writer,outfile = printFilename(filetype="pat")
+    writer,outfile = printFilename(filetype="small_pat")
     writer.writerows(patData)
     outfile.close()
     
-    writer,outfile = printFilename(filetype="dx")
+    writer,outfile = printFilename(filetype="small_dx")
     writer.writerows(dxData)
     outfile.close()
     
-    writer,outfile = printFilename(filetype="med")
+    writer,outfile = printFilename(filetype="small_med")
     writer.writerows(medData)
     outfile.close()
 
-    writer,outfile = printFilename(filetype="prc")
+    writer,outfile = printFilename(filetype="small_prc")
     writer.writerows(prcData)
     outfile.close()
 

@@ -21,16 +21,16 @@ class Patient():
         #self.birth_date = dt.date(rint(1930,2005),rint(1,12),rint(1,28))
         self.age = helper.random_age()
         self.opioid_overdose = helper.opioid_label(self.age,self.sex)
-        self.ed_return = helper.ed_return_label(self.age,self.sex)
+        self.ed_return_prob = helper.ed_return_label(self.age,self.sex) # Return Prob of ed return
         self.enc_list = []
         self.csn_dict = {}
     def add_csn(self,enc):
         self.enc_list.append(enc)
         self.csn_dict[enc.csn] = enc
     def has_positive(self):
-        return (self.opioid_overdose or self.ed_return)
+        return (self.opioid_overdose)
     def print_patient(self):
-        print(self.mrn,'\t',self.opioid_overdose,'\t',self.ed_return)
+        print(self.mrn,'\t',self.opioid_overdose,'\t')
         print('\tNumber of Encounters:',len(self.enc_list))
 
 # Encounter Level Information - Link to Medications and Diagnoses  
@@ -46,6 +46,7 @@ class Encounter():
         sample_dept = ["RIH ANDERSON EMERGENCY","TMH EMERGENCY",
                        "NPH EMERGENCY","HCH HASBRO EMERGENCY"]
         self.dept = sample_dept[rint(0,len(sample_dept)-1)]
+        self.ed_return = 0
     def add_med(self,med):
         self.med_list.append(med)
     def add_dx(self,dx):
