@@ -64,7 +64,7 @@ class Encounter():
 # Medication Level Information
 class Medication():
     def __init__(self,med_type,opioid=None):
-        self.med_class = med_type/5
+        self.med_class = med_type//5
         self.med_name = "med-"+str(med_type) 
         if opioid:
             self.med_class = 100
@@ -86,5 +86,5 @@ class Diagnosis():
 # Procedure Level Information
 class Procedure():
     def __init__(self,prc_type):
-        self.prc_class = prc_type/5
+        self.prc_class = prc_type//5
         self.prc_name = 'prc-'+str(prc_type)

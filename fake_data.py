@@ -151,6 +151,6 @@ def load_db(filename):
 
 
 if __name__ == '__main__':
-    data = Database(5000,25000)
-    save_db(data,'data/small_db.p')
+    data = Database(50000,250000)
+    save_db(data,'data/db.p')
     data.print_stats()
