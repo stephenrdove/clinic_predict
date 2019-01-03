@@ -197,6 +197,12 @@ def write_dataset(text,static,ed_labels,op_labels):
     for i,sentence in enumerate(text):
         for _ in range(max_len - seq_lens[i]):
             text[i].append('<pad>')
+        text[i] = ' '.join(sentence)
+    
+    for i,row in enumerate(static):
+    #    for j,num in enumerate(row):
+    #        row[j] = str(num)
+        static[i] = ' '.join(row.astype('U'))
     data_dict = {'dynamic':text, 'static':static, 'seq_lens':seq_lens, 'ed':ed_labels, 'op':op_labels}
     data_df = pd.DataFrame(data=data_dict)
     print(data_df)
