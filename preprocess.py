@@ -196,7 +196,7 @@ def write_dataset(text,static,ed_labels,op_labels):
     max_len = max(seq_lens)
     for i,sentence in enumerate(text):
         for _ in range(max_len - seq_lens[i]):
-            text[i].append('<pad>')
+            text[i].append('<PAD>')
         text[i] = ' '.join(sentence)
     
     for i,row in enumerate(static):
@@ -206,7 +206,7 @@ def write_dataset(text,static,ed_labels,op_labels):
     data_dict = {'dynamic':text, 'static':static, 'seq_lens':seq_lens, 'ed':ed_labels, 'op':op_labels}
     data_df = pd.DataFrame(data=data_dict)
     print(data_df)
-    data_df.to_csv('data/train.csv',index=False)
+    data_df.to_csv('data/test.csv',index=False)
 
     #for i,sentence in enumerate(text):
     #    for _ in range(max_len - seq_lens[i]):
@@ -224,7 +224,7 @@ def write_dataset(text,static,ed_labels,op_labels):
 
 if __name__ == '__main__':
     
-    dataset = load_db('data/db.p')
+    dataset = load_db('data/small_db.p')
     create_csn_index(dataset)
     ed,op = add_enc_label(dataset)
     #test_labels(dataset,ed,op)
